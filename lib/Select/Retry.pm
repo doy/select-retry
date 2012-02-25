@@ -13,13 +13,6 @@ sub retry_select {
         : { mode => 'r' });
     my (@handles) = @_;
 
-    my $got_winch;
-    my $old_winch = $SIG{WINCH};
-    local $SIG{WINCH} = sub {
-        $got_winch = 1;
-        $old_winch->() if ref($old_winch) && ref($old_winch) eq 'CODE';
-    };
-
     my ($out, $eout);
     my ($in, $ein) = (_build_select_vec(@handles)) x 2;
     my $res;
@@ -31,11 +24,14 @@ sub retry_select {
     }
     my $again = $!{EAGAIN} || $!{EINTR};
 
-    if (($res == -1 && $again) || $got_winch) {
-        return retry_select(@_);
-    }
-    elsif ($res == -1) {
-        Carp::croak("select failed: $!");
+    if ($res == -1) {
+        if ($again) {
+            warn "retrying...";
+            return retry_select(@_);
+        }
+        else {
+            Carp::croak("select failed: $!");
+        }
     }
 
     return ($out, $eout);
