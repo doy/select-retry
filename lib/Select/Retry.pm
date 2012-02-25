@@ -8,7 +8,10 @@ use Sub::Exporter -setup => {
 };
 
 sub retry_select {
-    my ($mode, $timeout, @handles) = @_;
+    my $options = (@_ > 1 && ref($_[0]) eq 'HASH'
+        ? shift
+        : { mode => 'r' });
+    my (@handles) = @_;
 
     my $got_winch;
     my $old_winch = $SIG{WINCH};
@@ -20,11 +23,11 @@ sub retry_select {
     my ($out, $eout);
     my ($in, $ein) = (_build_select_vec(@handles)) x 2;
     my $res;
-    if ($mode eq 'r') {
-        $res = select($out = $in, undef, $eout = $ein, $timeout);
+    if ($options->{mode} eq 'r') {
+        $res = select($out = $in, undef, $eout = $ein, $options->{timeout});
     }
     else {
-        $res = select(undef, $out = $in, $eout = $ein, $timeout);
+        $res = select(undef, $out = $in, $eout = $ein, $options->{timeout});
     }
     my $again = $!{EAGAIN} || $!{EINTR};
 
