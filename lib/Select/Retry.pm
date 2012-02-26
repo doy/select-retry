@@ -26,7 +26,6 @@ sub retry_select {
 
     if ($res == -1) {
         if ($again) {
-            warn "retrying...";
             return retry_select(@_);
         }
         else {
