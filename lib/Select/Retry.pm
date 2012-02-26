@@ -26,7 +26,7 @@ sub retry_select {
 
     if ($res == -1) {
         if ($again) {
-            return retry_select(@_);
+            return retry_select($options, @handles);
         }
         else {
             Carp::croak("select failed: $!");
